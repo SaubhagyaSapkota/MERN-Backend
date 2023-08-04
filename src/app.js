@@ -38,20 +38,50 @@ User.createCollection()
     console.log(err);
   });
 
-User.create({
-  email: "test@test.com",
-  username: "me",
-  fullname: "Saubhagya Sapkota",
-  title: "Software Developer",
-  skills: ["JS", "PHP", "JAVA"],
-  address: "Kathmnadu, Nepal",
+const postsSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  location: String,
+  job_type: String,
+  pay_rate_per_hr_dollar: Number,
+  skills: [{ type: String }],
+  liked_by: [{ type: String }],
+  viewed_by: [{ type: String }],
+  id: Number,
+  user_id: Number,
+  post_by_username: String,
+  post_by_fullname: String,
+  post_date: String,
+  comments: [],
+});
+
+const Posts = mongoose.model("posts", postsSchema);
+
+User.createCollection()
+  .then((col) => {
+    console.log("Collection", "created");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+Posts.create({
+  title: "PHP Developer Required",
+  description: "For a client project PHP Developer is required",
+  location: "Kathmandu",
   job_type: "Full Time",
-  id: 1,
-  is_active: true,
-  followers: ["username123", "user234", "user543"],
-  followings: ["username123", "user234", "user543", "user555"],
+  pay_rate_per_hr_dollar: 10.0,
+  skills: ["PHP", "JS", "HTML"],
+  liked_by: ["test111", "test1", "test123"],
+  viewed_by: ["test111", "test1", "test123"],
+  id: 2,
+  user_id: 1,
+  post_by_username: "me",
+  post_by_fullname: "Saubhagya Sapkota 1",
+  post_date: "2023-06-10T09:24:07.659034",
+  comments: [],
 }).then(() => {
-  console.log("User Created");
+  console.log("Posts Created");
 });
 
 app.get("/", (req, res) => {
@@ -63,9 +93,32 @@ app.get("/api/v1/posts", (req, res) => {
   const posts = fs.readFileSync("./data/posts.json", "utf-8").toString();
   res.status(200).send(posts);
 });
-app.get("/api/v1/user", (req, res) => {
-  const user = fs.readFileSync("./data/user.json", "utf-8").toString();
-  res.status(200).send(user);
+app.get("/api/v1/user", async (req, res) => {
+  const user = await User.find({ id: 1 });
+  //const user = fs.readFileSync("./data/user.json", "utf-8").toString();
+  res.status(200).send(user[0]);
+});
+
+app.post("/api/v1/user", (req, resp) => {
+  const id = req.query.id;
+  const newUser = {
+    email: "test@test.com",
+    username: "me",
+    fullname: "Saubhagya Sapkota",
+    title: "Software Developer",
+    skills: ["JS", "PHP", "JAVA"],
+    address: "Kathmnadu, Nepal",
+    job_type: "Full Time",
+    id: id,
+    is_active: true,
+    followers: [],
+    followings: [],
+  };
+
+  User.create(newUser).then((createdUser) => {
+    console.log("User Created");
+    resp.status(200).send(createdUser);
+  });
 });
 
 app.listen(PORT, () => {

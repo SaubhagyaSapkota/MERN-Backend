@@ -2,8 +2,10 @@ const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
 
 const app = express();
+app.use(bodyParser.json());
 app.use(cors());
 
 const PORT = 5000;
@@ -18,6 +20,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   username: String,
   fullname: String,
+  password: String,
   title: String,
   skills: [{ type: String }],
   address: String,
@@ -29,14 +32,6 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model("user", userSchema);
-
-User.createCollection()
-  .then((col) => {
-    console.log("Collection", col, "created");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
 
 const postsSchema = new mongoose.Schema({
   title: String,
@@ -57,32 +52,24 @@ const postsSchema = new mongoose.Schema({
 
 const Posts = mongoose.model("posts", postsSchema);
 
-User.createCollection()
-  .then((col) => {
-    console.log("Collection", "created");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
-Posts.create({
-  title: "PHP Developer Required",
-  description: "For a client project PHP Developer is required",
-  location: "Kathmandu",
-  job_type: "Full Time",
-  pay_rate_per_hr_dollar: 10.0,
-  skills: ["PHP", "JS", "HTML"],
-  liked_by: ["test111", "test1", "test123"],
-  viewed_by: ["test111", "test1", "test123"],
-  id: 2,
-  user_id: 1,
-  post_by_username: "me",
-  post_by_fullname: "Saubhagya Sapkota 1",
-  post_date: "2023-06-10T09:24:07.659034",
-  comments: [],
-}).then(() => {
-  console.log("Posts Created");
-});
+// Posts.create({
+//   title: "PHP Developer Required",
+//   description: "For a client project PHP Developer is required",
+//   location: "Kathmandu",
+//   job_type: "Full Time",
+//   pay_rate_per_hr_dollar: 10.0,
+//   skills: ["PHP", "JS", "HTML"],
+//   liked_by: ["test111", "test1", "test123"],
+//   viewed_by: ["test111", "test1", "test123"],
+//   id: 2,
+//   user_id: 1,
+//   post_by_username: "me",
+//   post_by_fullname: "Saubhagya Sapkota 1",
+//   post_date: "2023-06-10T09:24:07.659034",
+//   comments: [],
+// }).then(() => {
+//   console.log("Posts Created");
+// });
 
 app.get("/", (req, res) => {
   res.status(200).send("This is response from BE");
@@ -99,17 +86,33 @@ app.get("/api/v1/user", async (req, res) => {
   res.status(200).send(user[0]);
 });
 
-app.post("/api/v1/user", (req, resp) => {
-  const id = req.query.id;
+app.post("/api/v1/user", async (req, resp) => {
+  const lastUser = await User.findOne({}, null, { sort: { id: -1 } });
+
+  const {
+    username,
+    email,
+    fullname,
+    title,
+    job_type,
+    skills,
+    address,
+    password,
+  } = req.body;
+  let id = 1;
+  if (lastUser) {
+    id = lastUser.id + 1;
+  }
   const newUser = {
-    email: "test@test.com",
-    username: "me",
-    fullname: "Saubhagya Sapkota",
-    title: "Software Developer",
-    skills: ["JS", "PHP", "JAVA"],
-    address: "Kathmnadu, Nepal",
-    job_type: "Full Time",
-    id: id,
+    email,
+    password,
+    username,
+    fullname,
+    title,
+    skills,
+    address,
+    job_type,
+    id,
     is_active: true,
     followers: [],
     followings: [],
